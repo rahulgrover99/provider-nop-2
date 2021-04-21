@@ -1,9 +1,9 @@
 apiVersion: sample.template.crossplane.io/v1alpha1
-kind: MyType
+kind: NopResource
 metadata:
   name: example
 spec:
   forProvider:
-    configurableField: test
-  providerConfigRef:
-    name: example
+    conditionAfter:
+      - condition: "ready"
+        time: "5s"

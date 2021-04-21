@@ -37,14 +37,14 @@ var (
 	SchemeBuilder = &scheme.Builder{GroupVersion: SchemeGroupVersion}
 )
 
-// MyType type metadata.
+// NopResource type metadata.
 var (
-	MyTypeKind             = reflect.TypeOf(MyType{}).Name()
-	MyTypeGroupKind        = schema.GroupKind{Group: Group, Kind: MyTypeKind}.String()
-	MyTypeKindAPIVersion   = MyTypeKind + "." + SchemeGroupVersion.String()
-	MyTypeGroupVersionKind = SchemeGroupVersion.WithKind(MyTypeKind)
+	NopResourceKind             = reflect.TypeOf(NopResource{}).Name()
+	NopResourceGroupKind        = schema.GroupKind{Group: Group, Kind: NopResourceKind}.String()
+	NopResourceKindAPIVersion   = NopResourceKind + "." + SchemeGroupVersion.String()
+	NopResourceGroupVersionKind = SchemeGroupVersion.WithKind(NopResourceKind)
 )
 
 func init() {
-	SchemeBuilder.Register(&MyType{}, &MyTypeList{})
+	SchemeBuilder.Register(&NopResource{}, &NopResourceList{})
 }

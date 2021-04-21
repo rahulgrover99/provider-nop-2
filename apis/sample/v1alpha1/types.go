@@ -22,50 +22,57 @@ import (
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 )
 
-// MyTypeParameters are the configurable fields of a MyType.
-type MyTypeParameters struct {
-	ConfigurableField string `json:"configurableField"`
+// ResourceConditionAfter is a configurable field of NopResource.
+type ResourceConditionAfter struct {
+	Time      string `json:"time"`
+	Condition string `json:"condition"`
 }
 
-// MyTypeObservation are the observable fields of a MyType.
-type MyTypeObservation struct {
+// NopResourceParameters are the configurable fields of a NopResource.
+type NopResourceParameters struct {
+	ConditionAfter []ResourceConditionAfter `json:"conditionAfter"`
+}
+
+// NopResourceObservation are the observable fields of a NopResource.
+type NopResourceObservation struct {
 	ObservableField string `json:"observableField,omitempty"`
+	// ObservableArrays []string
 }
 
-// A MyTypeSpec defines the desired state of a MyType.
-type MyTypeSpec struct {
+// A NopResourceSpec defines the desired state of a NopResource.
+type NopResourceSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       MyTypeParameters `json:"forProvider"`
+	ForProvider       NopResourceParameters `json:"forProvider"`
 }
 
-// A MyTypeStatus represents the observed state of a MyType.
-type MyTypeStatus struct {
+// A NopResourceStatus represents the observed state of a NopResource.
+type NopResourceStatus struct {
 	xpv1.ResourceStatus `json:",inline"`
-	AtProvider          MyTypeObservation `json:"atProvider,omitempty"`
+	AtProvider          NopResourceObservation `json:"atProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// A MyType is an example API type.
+// A NopResource is an example API type.
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.bindingPhase"
 // +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.atProvider.state"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // Please replace `PROVIDER-NAME` with your actual provider name, like `aws`, `azure`, `gcp`, `alibaba`
-// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,PROVIDER-NAME}
-type MyType struct {
+// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,nop}
+type NopResource struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   MyTypeSpec   `json:"spec"`
-	Status MyTypeStatus `json:"status,omitempty"`
+	Spec   NopResourceSpec   `json:"spec"`
+	Status NopResourceStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// MyTypeList contains a list of MyType
-type MyTypeList struct {
+// NopResourceList contains a list of NopResource
+type NopResourceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []MyType `json:"items"`
+	Items           []NopResource `json:"items"`
 }

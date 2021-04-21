@@ -14,75 +14,80 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package mytype
+package nopresource
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
+
+	// "sigs.k8s.io/controller-runtime/pkg/controller"
 
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
-	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
+
+	// "github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
+	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/provider-template/apis/sample/v1alpha1"
-	apisv1alpha1 "github.com/crossplane/provider-template/apis/v1alpha1"
+	// apisv1alpha1 "github.com/crossplane/provider-template/apis/v1alpha1"
 )
 
 const (
-	errNotMyType    = "managed resource is not a MyType custom resource"
-	errTrackPCUsage = "cannot track ProviderConfig usage"
-	errGetPC        = "cannot get ProviderConfig"
-	errGetCreds     = "cannot get credentials"
+	errNotNopResource = "managed resource is not a NopResource custom resource"
+	errTrackPCUsage   = "cannot track ProviderConfig usage"
+	errGetPC          = "cannot get ProviderConfig"
+	errGetCreds       = "cannot get credentials"
 
-	errNewClient = "cannot create new Service"
+	// errNewClient = "cannot create new Service"
 )
 
 // A NoOpService does nothing.
-type NoOpService struct{}
+// type NoOpService struct{}
 
-var (
-	newNoOpService = func(_ []byte) (interface{}, error) { return &NoOpService{}, nil }
-)
+// var (
+// 	newNoOpService = func(_ []byte) (interface{}, error) { return &NoOpService{}, nil }
+// )
 
-// Setup adds a controller that reconciles MyType managed resources.
+// Setup adds a controller that reconciles NopResource managed resources.
 func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
-	name := managed.ControllerName(v1alpha1.MyTypeGroupKind)
+	name := managed.ControllerName(v1alpha1.NopResourceGroupKind)
 
-	o := controller.Options{
-		RateLimiter: ratelimiter.NewDefaultManagedRateLimiter(rl),
-	}
+	// o := controller.Options{
+	// 	RateLimiter: ratelimiter.NewDefaultManagedRateLimiter(rl),
+	// }
 
 	r := managed.NewReconciler(mgr,
-		resource.ManagedKind(v1alpha1.MyTypeGroupVersionKind),
+		resource.ManagedKind(v1alpha1.NopResourceGroupVersionKind),
 		managed.WithExternalConnecter(&connector{
-			kube:         mgr.GetClient(),
-			usage:        resource.NewProviderConfigUsageTracker(mgr.GetClient(), &apisv1alpha1.ProviderConfigUsage{}),
-			newServiceFn: newNoOpService}),
+			kube: mgr.GetClient(),
+			// usage:        resource.NewProviderConfigUsageTracker(mgr.GetClient(), &apisv1alpha1.ProviderConfigUsage{}),
+			// newServiceFn: newNoOpService
+		}),
+		managed.WithInitializers(managed.NewNameAsExternalName(mgr.GetClient())),
 		managed.WithLogger(l.WithValues("controller", name)),
 		managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name))))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		WithOptions(o).
-		For(&v1alpha1.MyType{}).
+		// WithOptions(o).
+		For(&v1alpha1.NopResource{}).
 		Complete(r)
 }
 
 // A connector is expected to produce an ExternalClient when its Connect method
 // is called.
 type connector struct {
-	kube         client.Client
-	usage        resource.Tracker
-	newServiceFn func(creds []byte) (interface{}, error)
+	kube client.Client
+	// usage        resource.Tracker
+	// newServiceFn func(creds []byte) (interface{}, error)
 }
 
 // Connect typically produces an ExternalClient by:
@@ -91,32 +96,35 @@ type connector struct {
 // 3. Getting the credentials specified by the ProviderConfig.
 // 4. Using the credentials to form a client.
 func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	cr, ok := mg.(*v1alpha1.MyType)
+	fmt.Printf("--- CONNECTING ----")
+	cr, ok := mg.(*v1alpha1.NopResource)
 	if !ok {
-		return nil, errors.New(errNotMyType)
+		return nil, errors.New(errNotNopResource)
 	}
 
-	if err := c.usage.Track(ctx, mg); err != nil {
-		return nil, errors.Wrap(err, errTrackPCUsage)
-	}
+	cr.SetConditions(runtimev1alpha1.Available())
 
-	pc := &apisv1alpha1.ProviderConfig{}
-	if err := c.kube.Get(ctx, types.NamespacedName{Name: cr.GetProviderConfigReference().Name}, pc); err != nil {
-		return nil, errors.Wrap(err, errGetPC)
-	}
+	// if err := c.usage.Track(ctx, mg); err != nil {
+	// 	return nil, errors.Wrap(err, errTrackPCUsage)
+	// }
 
-	cd := pc.Spec.Credentials
-	data, err := resource.CommonCredentialExtractor(ctx, cd.Source, c.kube, cd.CommonCredentialSelectors)
-	if err != nil {
-		return nil, errors.Wrap(err, errGetCreds)
-	}
+	// pc := &apisv1alpha1.ProviderConfig{}
+	// if err := c.kube.Get(ctx, types.NamespacedName{Name: cr.GetProviderConfigReference().Name}, pc); err != nil {
+	// 	return nil, errors.Wrap(err, errGetPC)
+	// }
 
-	svc, err := c.newServiceFn(data)
-	if err != nil {
-		return nil, errors.Wrap(err, errNewClient)
-	}
+	// cd := pc.Spec.Credentials
+	// data, err := resource.CommonCredentialExtractor(ctx, cd.Source, c.kube, cd.CommonCredentialSelectors)
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, errGetCreds)
+	// }
 
-	return &external{service: svc}, nil
+	// svc, err := c.newServiceFn(data)
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, errNewClient)
+	// }
+
+	return &external{}, nil
 }
 
 // An ExternalClient observes, then either creates, updates, or deletes an
@@ -128,13 +136,22 @@ type external struct {
 }
 
 func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
-	cr, ok := mg.(*v1alpha1.MyType)
+	cr, ok := mg.(*v1alpha1.NopResource)
 	if !ok {
-		return managed.ExternalObservation{}, errors.New(errNotMyType)
+		return managed.ExternalObservation{}, errors.New(errNotNopResource)
+	}
+
+	fmt.Printf("\n\n	My values	\n\n")
+	fmt.Printf(cr.Spec.ForProvider.ConditionAfter[0].Condition)
+	fmt.Printf("\n\n")
+
+	if meta.WasDeleted(mg) {
+		return managed.ExternalObservation{ResourceExists: false}, nil
 	}
 
 	// These fmt statements should be removed in the real implementation.
 	fmt.Printf("Observing: %+v", cr)
+	cr.SetConditions(runtimev1alpha1.Available())
 
 	return managed.ExternalObservation{
 		// Return false when the external resource does not exist. This lets
@@ -154,12 +171,14 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 }
 
 func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
-	cr, ok := mg.(*v1alpha1.MyType)
+	cr, ok := mg.(*v1alpha1.NopResource)
 	if !ok {
-		return managed.ExternalCreation{}, errors.New(errNotMyType)
+		return managed.ExternalCreation{}, errors.New(errNotNopResource)
 	}
 
 	fmt.Printf("Creating: %+v", cr)
+
+	cr.Status.SetConditions(runtimev1alpha1.Creating())
 
 	return managed.ExternalCreation{
 		// Optionally return any details that may be required to connect to the
@@ -169,12 +188,14 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 }
 
 func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
-	cr, ok := mg.(*v1alpha1.MyType)
+	cr, ok := mg.(*v1alpha1.NopResource)
 	if !ok {
-		return managed.ExternalUpdate{}, errors.New(errNotMyType)
+		return managed.ExternalUpdate{}, errors.New(errNotNopResource)
 	}
 
 	fmt.Printf("Updating: %+v", cr)
+
+	cr.Status.SetConditions(runtimev1alpha1.Available())
 
 	return managed.ExternalUpdate{
 		// Optionally return any details that may be required to connect to the
@@ -184,12 +205,14 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 }
 
 func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
-	cr, ok := mg.(*v1alpha1.MyType)
+	cr, ok := mg.(*v1alpha1.NopResource)
 	if !ok {
-		return errors.New(errNotMyType)
+		return errors.New(errNotNopResource)
 	}
 
 	fmt.Printf("Deleting: %+v", cr)
+
+	cr.Status.SetConditions(runtimev1alpha1.Deleting())
 
 	return nil
 }
