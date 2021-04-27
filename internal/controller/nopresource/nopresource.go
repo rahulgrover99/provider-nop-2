@@ -19,25 +19,24 @@ package nopresource
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/pkg/errors"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	// "sigs.k8s.io/controller-runtime/pkg/controller"
-
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
-	// "github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/provider-template/apis/sample/v1alpha1"
-	// apisv1alpha1 "github.com/crossplane/provider-template/apis/v1alpha1"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -45,39 +44,24 @@ const (
 	errTrackPCUsage   = "cannot track ProviderConfig usage"
 	errGetPC          = "cannot get ProviderConfig"
 	errGetCreds       = "cannot get credentials"
-
-	// errNewClient = "cannot create new Service"
 )
-
-// A NoOpService does nothing.
-// type NoOpService struct{}
-
-// var (
-// 	newNoOpService = func(_ []byte) (interface{}, error) { return &NoOpService{}, nil }
-// )
 
 // Setup adds a controller that reconciles NopResource managed resources.
 func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
 	name := managed.ControllerName(v1alpha1.NopResourceGroupKind)
 
-	// o := controller.Options{
-	// 	RateLimiter: ratelimiter.NewDefaultManagedRateLimiter(rl),
-	// }
-
 	r := managed.NewReconciler(mgr,
 		resource.ManagedKind(v1alpha1.NopResourceGroupVersionKind),
 		managed.WithExternalConnecter(&connector{
 			kube: mgr.GetClient(),
-			// usage:        resource.NewProviderConfigUsageTracker(mgr.GetClient(), &apisv1alpha1.ProviderConfigUsage{}),
-			// newServiceFn: newNoOpService
 		}),
 		managed.WithInitializers(managed.NewNameAsExternalName(mgr.GetClient())),
+		managed.WithPollInterval(1*time.Second),
 		managed.WithLogger(l.WithValues("controller", name)),
 		managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name))))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		// WithOptions(o).
 		For(&v1alpha1.NopResource{}).
 		Complete(r)
 }
@@ -86,8 +70,6 @@ func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
 // is called.
 type connector struct {
 	kube client.Client
-	// usage        resource.Tracker
-	// newServiceFn func(creds []byte) (interface{}, error)
 }
 
 // Connect typically produces an ExternalClient by:
@@ -96,33 +78,12 @@ type connector struct {
 // 3. Getting the credentials specified by the ProviderConfig.
 // 4. Using the credentials to form a client.
 func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	fmt.Printf("--- CONNECTING ----")
-	cr, ok := mg.(*v1alpha1.NopResource)
+	_, ok := mg.(*v1alpha1.NopResource)
 	if !ok {
 		return nil, errors.New(errNotNopResource)
 	}
 
-	cr.SetConditions(runtimev1alpha1.Available())
-
-	// if err := c.usage.Track(ctx, mg); err != nil {
-	// 	return nil, errors.Wrap(err, errTrackPCUsage)
-	// }
-
-	// pc := &apisv1alpha1.ProviderConfig{}
-	// if err := c.kube.Get(ctx, types.NamespacedName{Name: cr.GetProviderConfigReference().Name}, pc); err != nil {
-	// 	return nil, errors.Wrap(err, errGetPC)
-	// }
-
-	// cd := pc.Spec.Credentials
-	// data, err := resource.CommonCredentialExtractor(ctx, cd.Source, c.kube, cd.CommonCredentialSelectors)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, errGetCreds)
-	// }
-
-	// svc, err := c.newServiceFn(data)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, errNewClient)
-	// }
+	// fmt.Printf(string(cr.GetCondition(runtimev1alpha1.TypeReady).Status) + "\n\n")
 
 	return &external{}, nil
 }
@@ -140,18 +101,66 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	if !ok {
 		return managed.ExternalObservation{}, errors.New(errNotNopResource)
 	}
+	startTime := cr.CreationTimestamp
 
-	fmt.Printf("\n\n	My values	\n\n")
-	fmt.Printf(cr.Spec.ForProvider.ConditionAfter[0].Condition)
-	fmt.Printf("\n\n")
-
+	// If object was deleted, return it does not exist so that managed reconciler removes finalizer
 	if meta.WasDeleted(mg) {
 		return managed.ExternalObservation{ResourceExists: false}, nil
 	}
 
+	// Logic 1 - Set condition as soon as the time elapsed in seconds is equal to time specified in Spec
+	// for i := 0; i < len(cr.Spec.ForProvider.ConditionAfter); i++ {
+	// 	elapsed, _ := time.ParseDuration(cr.Spec.ForProvider.ConditionAfter[i].Time)
+	// 	if time.Duration(time.Since(startTime.Time).Seconds()) == time.Duration(elapsed.Seconds()) {
+	// 		fmt.Printf("Calling update on index %d\n", i)
+
+	// 		x := runtimev1alpha1.Condition{
+	// 			Type:               runtimev1alpha1.ConditionType(cr.Spec.ForProvider.ConditionAfter[i].ConditionType),
+	// 			Status:             v1.ConditionStatus(cr.Spec.ForProvider.ConditionAfter[i].ConditionStatus),
+	// 			LastTransitionTime: metav1.Now(),
+	// 			Reason:             runtimev1alpha1.ReasonAvailable,
+	// 		}
+
+	// 		cr.Status.SetConditions(x)
+
+	// 	}
+	// }
+
+	// Logic 2 - Set condition at every reconcile to the latest specified condition in Spec
+	l := -1
+	mx := -1
+	for i := 0; i < len(cr.Spec.ForProvider.ConditionAfter); i++ {
+		elapsed, _ := time.ParseDuration(cr.Spec.ForProvider.ConditionAfter[i].Time)
+		if time.Duration(time.Since(startTime.Time).Seconds()) >= time.Duration(elapsed.Seconds()) {
+			if mx < int(elapsed.Seconds()) {
+				mx = int(elapsed.Seconds())
+				l = i
+			}
+		}
+	}
+	if l != -1 {
+		fmt.Printf("Calling update on index %d\n", l)
+
+		x := runtimev1alpha1.Condition{
+			Type:               runtimev1alpha1.ConditionType(cr.Spec.ForProvider.ConditionAfter[l].ConditionType),
+			Status:             v1.ConditionStatus(cr.Spec.ForProvider.ConditionAfter[l].ConditionStatus),
+			LastTransitionTime: metav1.Now(),
+			Reason:             runtimev1alpha1.ReasonAvailable,
+		}
+
+		cr.Status.SetConditions(x)
+
+	}
+
+	x := cr.Status.Conditions
+	fmt.Printf("\n\n	My values	\n\n")
+	fmt.Printf(time.Since(startTime.Time).String() + "\n\n")
+	for _, e := range x {
+		fmt.Printf("%s %s %s %s", string(e.Reason), string(e.Message), string(e.Status), string(e.Type))
+		fmt.Print("\n\n")
+	}
 	// These fmt statements should be removed in the real implementation.
-	fmt.Printf("Observing: %+v", cr)
-	cr.SetConditions(runtimev1alpha1.Available())
+	// fmt.Printf("Observing: %+v", cr)
 
 	return managed.ExternalObservation{
 		// Return false when the external resource does not exist. This lets
@@ -178,8 +187,6 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 
 	fmt.Printf("Creating: %+v", cr)
 
-	cr.Status.SetConditions(runtimev1alpha1.Creating())
-
 	return managed.ExternalCreation{
 		// Optionally return any details that may be required to connect to the
 		// external resource. These will be stored as the connection secret.
@@ -194,8 +201,6 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 	}
 
 	fmt.Printf("Updating: %+v", cr)
-
-	cr.Status.SetConditions(runtimev1alpha1.Available())
 
 	return managed.ExternalUpdate{
 		// Optionally return any details that may be required to connect to the

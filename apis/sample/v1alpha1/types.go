@@ -24,8 +24,9 @@ import (
 
 // ResourceConditionAfter is a configurable field of NopResource.
 type ResourceConditionAfter struct {
-	Time      string `json:"time"`
-	Condition string `json:"condition"`
+	Time            string `json:"time"`
+	ConditionType   string `json:"conditionType"`
+	ConditionStatus string `json:"conditionStatus"`
 }
 
 // NopResourceParameters are the configurable fields of a NopResource.
@@ -55,8 +56,8 @@ type NopResourceStatus struct {
 
 // A NopResource is an example API type.
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.bindingPhase"
-// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.atProvider.state"
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // Please replace `PROVIDER-NAME` with your actual provider name, like `aws`, `azure`, `gcp`, `alibaba`
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,nop}
