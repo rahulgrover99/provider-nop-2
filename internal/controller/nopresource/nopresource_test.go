@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
@@ -97,13 +98,19 @@ func TestReconcileLogic(t *testing.T) {
 			reason:            "Empty slice should be returned in case no conditions specified till given time elapsed.",
 			resourcecondition: c,
 			elapsedtime:       time.Duration(1*time.Second + 999*time.Millisecond),
-			want:              []int{},
+			want:              nil,
 		},
 		"SingleTypeReconcile": {
 			reason:            "Slice with a single element should be returned when a single condition type has been specified.",
 			resourcecondition: c,
 			elapsedtime:       time.Duration(2 * time.Second),
 			want:              []int{5},
+		},
+		"IndexChangeReconcile": {
+			reason:            "Even if condition specified is same at later time, index for the later time should be returned.",
+			resourcecondition: c,
+			elapsedtime:       time.Duration(5 * time.Second),
+			want:              []int{1, 3},
 		},
 		"NormalReconcileBehaviour": {
 			reason:            "Indexes with latest status of each condition type should be returned till given time elapsed.",
@@ -121,33 +128,14 @@ func TestReconcileLogic(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			got := ReconcileLogic(tc.resourcecondition, tc.elapsedtime)
-			if !sameIntSlice(tc.want, got) {
-				t.Errorf("\n%s\nReconcileLogic(...): want []int %v, got []int %v\n", tc.reason, tc.want, got)
+			got := reconcileLogic(tc.resourcecondition, tc.elapsedtime)
+
+			if diff := cmp.Diff(tc.want, got, cmpopts.SortSlices(func(i, j int) bool {
+				return i > j
+			})); diff != "" {
+				t.Errorf("\n%s\nReconcileLogic(...): -want, +got:\n%s", tc.reason, diff)
 			}
 		})
 	}
 
-}
-
-// Matches the content of the slices. Order does not matter.
-func sameIntSlice(x, y []int) bool {
-	if len(x) != len(y) {
-		return false
-	}
-
-	diff := make(map[int]int, len(x))
-	for _, _x := range x {
-		diff[_x]++
-	}
-	for _, _y := range y {
-		if _, ok := diff[_y]; !ok {
-			return false
-		}
-		diff[_y] -= 1
-		if diff[_y] == 0 {
-			delete(diff, _y)
-		}
-	}
-	return len(diff) == 0
 }

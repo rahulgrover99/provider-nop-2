@@ -108,7 +108,7 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		return managed.ExternalObservation{ResourceExists: false}, nil
 	}
 
-	ci := ReconcileLogic(cr.Spec.ForProvider.ConditionAfter, time.Since(startTime.Time))
+	ci := reconcileLogic(cr.Spec.ForProvider.ConditionAfter, time.Since(startTime.Time))
 
 	for _, l := range ci {
 		// fmt.Printf("Calling update on index %d\n", l)
@@ -194,15 +194,21 @@ func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
 	return nil
 }
 
-func ReconcileLogic(conditionAfter []v1alpha1.ResourceConditionAfter, t time.Duration) []int {
+// reconcileLogic returns a slice of indices from conditionAfter which states
+// the condition for each type specified till the given timeElapsed duration.
+func reconcileLogic(conditionAfter []v1alpha1.ResourceConditionAfter, timeElapsed time.Duration) []int {
 	latestTime := make(map[string]time.Duration)
 	latestIdx := make(map[string]int)
+
 	for i := 0; i < len(conditionAfter); i++ {
-		elapsed, _ := time.ParseDuration(conditionAfter[i].Time)
-		if t >= time.Duration(elapsed) {
-			mx, ok := latestTime[conditionAfter[i].ConditionType]
-			if !ok || mx < elapsed {
-				latestTime[conditionAfter[i].ConditionType] = elapsed
+		specTime, _ := time.ParseDuration(conditionAfter[i].Time)
+
+		// For each ConditionType finds the latest time it was updated until the
+		// elapsed time and the corresponding index of the same in conditionAfter.
+		if timeElapsed >= time.Duration(specTime) {
+			lastChange, ok := latestTime[conditionAfter[i].ConditionType]
+			if !ok || lastChange < specTime {
+				latestTime[conditionAfter[i].ConditionType] = specTime
 				latestIdx[conditionAfter[i].ConditionType] = i
 			}
 		}
