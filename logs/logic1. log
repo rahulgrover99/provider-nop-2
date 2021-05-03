@@ -1,0 +1,398 @@
+(base) rg99@Instance2:~/crossplane/provider-nop-2$ make run
+go generate ./...
+kubectl apply -f package/crds/ -R
+customresourcedefinition.apiextensions.k8s.io/nopresources.sample.template.crossplane.io configured
+go run cmd/provider/main.go -d
+2021-04-27T11:16:18.169Z        DEBUG   provider-template       Starting        {"sync-period": "1h0m0s"}
+2021-04-27T11:16:18.974Z        INFO    controller-runtime.metrics      metrics server is starting to listen       {"addr": ":8080"}
+2021-04-27T11:16:18.974Z        INFO    controller-runtime.injectors-warning    Injectors are deprecated, and will be removed in v0.10.x
+2021-04-27T11:16:18.974Z        INFO    controller-runtime.injectors-warning    Injectors are deprecated, and will be removed in v0.10.x
+2021-04-27T11:16:18.974Z        INFO    controller-runtime.manager      starting metrics server {"path": "/metrics"}
+2021-04-27T11:16:18.975Z        INFO    controller-runtime.manager.controller.managed/nopresource.sample.template.crossplane.io    Starting EventSource    {"reconciler group": "sample.template.crossplane.io", "reconciler kind": "NopResource", "source": "kind source: /, Kind="}
+2021-04-27T11:16:19.075Z        INFO    controller-runtime.manager.controller.managed/nopresource.sample.template.crossplane.io    Starting Controller     {"reconciler group": "sample.template.crossplane.io", "reconciler kind": "NopResource"}
+2021-04-27T11:16:19.075Z        INFO    controller-runtime.manager.controller.managed/nopresource.sample.template.crossplane.io    Starting workers        {"reconciler group": "sample.template.crossplane.io", "reconciler kind": "NopResource", "worker count": 1}
+2021-04-27T11:16:19.075Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+35.075530194s
+
+ReconcileSuccess%!(EXTRA string=, string=True, string=Synced)
+
+Available%!(EXTRA string=, string=True, string=Ready)
+
+2021-04-27T11:16:19.075Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "44ad2648-7928-4d16-9ff1-28ed09bc6165", "version": "1498445", "external-name": "example", "requeue-after": "2021-04-27T11:16:20.075Z"}
+2021-04-27T11:16:19.770Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+2021-04-27T11:16:19.796Z        DEBUG   provider-template       Successfully deleted managed resource   {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "44ad2648-7928-4d16-9ff1-28ed09bc6165", "version": "1498502", "external-name": "example", "deletion-timestamp": "2021-04-27 11:16:19 +0000 UTC"}
+2021-04-27T11:16:19.797Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+2021-04-27T11:16:19.797Z        DEBUG   provider-template       Cannot get managed resource     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "error": "NopResource.sample.template.crossplane.io \"example\" not found"}
+2021-04-27T11:16:20.081Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+2021-04-27T11:16:20.081Z        DEBUG   provider-template       Cannot get managed resource     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "error": "NopResource.sample.template.crossplane.io \"example\" not found"}
+^C2021-04-27T11:16:22.868Z      INFO    controller-runtime.manager.controller.managed/nopresource.sample.template.crossplane.io    Stopping workers        {"reconciler group": "sample.template.crossplane.io", "reconciler kind": "NopResource"}
+Makefile:18: recipe for target 'run' failed
+make: *** [run] Error 1
+
+(base) rg99@Instance2:~/crossplane/provider-nop-2$ make run
+go generate ./...
+kubectl apply -f package/crds/ -R
+customresourcedefinition.apiextensions.k8s.io/nopresources.sample.template.crossplane.io configured
+go run cmd/provider/main.go -d
+2021-04-27T11:17:38.546Z        DEBUG   provider-template       Starting        {"sync-period": "1h0m0s"}
+2021-04-27T11:17:39.352Z        INFO    controller-runtime.metrics      metrics server is starting to listen        {"addr": ":8080"}
+2021-04-27T11:17:39.352Z        INFO    controller-runtime.injectors-warning    Injectors are deprecated, and will be removed in v0.10.x
+2021-04-27T11:17:39.352Z        INFO    controller-runtime.injectors-warning    Injectors are deprecated, and will be removed in v0.10.x
+2021-04-27T11:17:39.352Z        INFO    controller-runtime.manager      starting metrics server     {"path": "/metrics"}
+2021-04-27T11:17:39.352Z        INFO    controller-runtime.manager.controller.managed/nopresource.sample.template.crossplane.io     Starting EventSource    {"reconciler group": "sample.template.crossplane.io", "reconciler kind": "NopResource", "source": "kind source: /, Kind="}
+2021-04-27T11:17:39.453Z        INFO    controller-runtime.manager.controller.managed/nopresource.sample.template.crossplane.io     Starting Controller     {"reconciler group": "sample.template.crossplane.io", "reconciler kind": "NopResource"}
+2021-04-27T11:17:39.453Z        INFO    controller-runtime.manager.controller.managed/nopresource.sample.template.crossplane.io     Starting workers        {"reconciler group": "sample.template.crossplane.io", "reconciler kind": "NopResource", "worker count": 1}
+2021-04-27T11:17:44.470Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+480.544954ms
+
+2021-04-27T11:17:44.499Z        DEBUG   provider-template       External resource is up to date     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498814", "external-name": "", "requeue-after": "2021-04-27T11:17:45.499Z"}
+2021-04-27T11:17:44.511Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+511.678562ms
+
+ReconcileSuccess  True Synced
+
+2021-04-27T11:17:44.511Z        DEBUG   provider-template       External resource is up to date     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498817", "external-name": "example", "requeue-after": "2021-04-27T11:17:45.511Z"}
+2021-04-27T11:17:44.530Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+530.226368ms
+
+ReconcileSuccess  True Synced
+
+2021-04-27T11:17:44.530Z        DEBUG   provider-template       External resource is up to date     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498817", "external-name": "example", "requeue-after": "2021-04-27T11:17:45.530Z"}
+2021-04-27T11:17:45.511Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+1.511879242s
+
+ReconcileSuccess  True Synced
+
+2021-04-27T11:17:45.511Z        DEBUG   provider-template       External resource is up to date     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498817", "external-name": "example", "requeue-after": "2021-04-27T11:17:46.511Z"}
+2021-04-27T11:17:46.519Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+2.519692826s
+
+ReconcileSuccess  True Synced
+
+2021-04-27T11:17:46.519Z        DEBUG   provider-template       External resource is up to date     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498817", "external-name": "example", "requeue-after": "2021-04-27T11:17:47.519Z"}
+2021-04-27T11:17:47.525Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+3.525142111s
+
+ReconcileSuccess  True Synced
+
+2021-04-27T11:17:47.525Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498817", "external-name": "example", "requeue-after": "2021-04-27T11:17:48.525Z"}
+2021-04-27T11:17:48.529Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+4.529695198s
+
+ReconcileSuccess  True Synced
+
+2021-04-27T11:17:48.529Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498817", "external-name": "example", "requeue-after": "2021-04-27T11:17:49.529Z"}
+2021-04-27T11:17:49.534Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+Calling update on index 0
+
+
+        My values
+
+5.534629987s
+
+ReconcileSuccess  True Synced
+
+Available  False Ready
+
+2021-04-27T11:17:49.534Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498817", "external-name": "example", "requeue-after": "2021-04-27T11:17:50.534Z"}
+2021-04-27T11:17:49.539Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+Calling update on index 0
+
+
+        My values
+
+5.539889588s
+
+ReconcileSuccess  True Synced
+
+Available  False Ready
+
+2021-04-27T11:17:49.539Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498834", "external-name": "example", "requeue-after": "2021-04-27T11:17:50.539Z"}
+2021-04-27T11:17:50.539Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+6.540080077s
+
+ReconcileSuccess  True Synced
+
+Available  False Ready
+
+2021-04-27T11:17:50.540Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498834", "external-name": "example", "requeue-after": "2021-04-27T11:17:51.540Z"}
+2021-04-27T11:17:51.545Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+7.54528457s
+
+ReconcileSuccess  True Synced
+
+Available  False Ready
+
+2021-04-27T11:17:51.545Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498834", "external-name": "example", "requeue-after": "2021-04-27T11:17:52.545Z"}
+2021-04-27T11:17:52.550Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+8.550862764s
+
+ReconcileSuccess  True Synced
+
+Available  False Ready
+
+2021-04-27T11:17:52.550Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498834", "external-name": "example", "requeue-after": "2021-04-27T11:17:53.550Z"}
+2021-04-27T11:17:53.555Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+9.556032761s
+
+ReconcileSuccess  True Synced
+
+Available  False Ready
+
+2021-04-27T11:17:53.556Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498834", "external-name": "example", "requeue-after": "2021-04-27T11:17:54.556Z"}
+2021-04-27T11:17:54.561Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+Calling update on index 1
+
+
+        My values
+
+10.561809859s
+
+ReconcileSuccess  True Synced
+
+Available  True Ready
+
+2021-04-27T11:17:54.561Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498834", "external-name": "example", "requeue-after": "2021-04-27T11:17:55.561Z"}
+2021-04-27T11:17:54.566Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+Calling update on index 1
+
+
+        My values
+
+10.566931961s
+
+ReconcileSuccess  True Synced
+
+Available  True Ready
+
+2021-04-27T11:17:54.566Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498856", "external-name": "example", "requeue-after": "2021-04-27T11:17:55.566Z"}
+2021-04-27T11:17:55.566Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+11.567061959s
+
+ReconcileSuccess  True Synced
+
+Available  True Ready
+
+2021-04-27T11:17:55.567Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498856", "external-name": "example", "requeue-after": "2021-04-27T11:17:56.567Z"}
+2021-04-27T11:17:56.572Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+12.572694161s
+
+ReconcileSuccess  True Synced
+
+Available  True Ready
+
+2021-04-27T11:17:56.572Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498856", "external-name": "example", "requeue-after": "2021-04-27T11:17:57.572Z"}
+2021-04-27T11:17:57.577Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+13.577586465s
+
+ReconcileSuccess  True Synced
+
+Available  True Ready
+
+2021-04-27T11:17:57.577Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498856", "external-name": "example", "requeue-after": "2021-04-27T11:17:58.577Z"}
+2021-04-27T11:17:58.582Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+14.58277647s
+
+ReconcileSuccess  True Synced
+
+Available  True Ready
+
+2021-04-27T11:17:58.582Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498856", "external-name": "example", "requeue-after": "2021-04-27T11:17:59.582Z"}
+2021-04-27T11:17:59.588Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+Calling update on index 2
+
+
+        My values
+
+15.588178778s
+
+Available  False Synced
+
+Available  True Ready
+
+2021-04-27T11:17:59.588Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498856", "external-name": "example", "requeue-after": "2021-04-27T11:18:00.588Z"}
+2021-04-27T11:17:59.593Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+Calling update on index 2
+
+
+        My values
+
+15.593518279s
+
+Available  False Synced
+
+Available  True Ready
+
+2021-04-27T11:17:59.593Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498873", "external-name": "example", "requeue-after": "2021-04-27T11:18:00.593Z"}
+2021-04-27T11:18:00.593Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+16.593581987s
+
+ReconcileSuccess  True Synced
+
+Available  True Ready
+
+2021-04-27T11:18:00.593Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498873", "external-name": "example", "requeue-after": "2021-04-27T11:18:01.593Z"}
+2021-04-27T11:18:01.599Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+17.599209698s
+
+ReconcileSuccess  True Synced
+
+Available  True Ready
+
+2021-04-27T11:18:01.599Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498873", "external-name": "example", "requeue-after": "2021-04-27T11:18:02.599Z"}
+2021-04-27T11:18:02.604Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+18.605071511s
+
+ReconcileSuccess  True Synced
+
+Available  True Ready
+
+2021-04-27T11:18:02.605Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498873", "external-name": "example", "requeue-after": "2021-04-27T11:18:03.605Z"}
+2021-04-27T11:18:03.610Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+19.610443426s
+
+ReconcileSuccess  True Synced
+
+Available  True Ready
+
+2021-04-27T11:18:03.610Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498873", "external-name": "example", "requeue-after": "2021-04-27T11:18:04.610Z"}
+2021-04-27T11:18:04.616Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+Calling update on index 3
+
+
+        My values
+
+20.616131043s
+
+Available  True Synced
+
+Available  True Ready
+
+2021-04-27T11:18:04.616Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498873", "external-name": "example", "requeue-after": "2021-04-27T11:18:05.616Z"}
+2021-04-27T11:18:04.621Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+Calling update on index 3
+
+
+        My values
+
+20.621124745s
+
+Available  True Synced
+
+Available  True Ready
+
+2021-04-27T11:18:04.621Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498895", "external-name": "example", "requeue-after": "2021-04-27T11:18:05.621Z"}
+2021-04-27T11:18:05.621Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+21.621235161s
+
+ReconcileSuccess  True Synced
+
+Available  True Ready
+
+2021-04-27T11:18:05.621Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498895", "external-name": "example", "requeue-after": "2021-04-27T11:18:06.621Z"}
+2021-04-27T11:18:06.627Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+22.627234282s
+
+ReconcileSuccess  True Synced
+
+Available  True Ready
+
+2021-04-27T11:18:06.627Z        DEBUG   provider-template       External resource is up to date {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example", "uid": "94b97e85-99ff-4b3c-8f2d-fc81ae3e3716", "version": "1498895", "external-name": "example", "requeue-after": "2021-04-27T11:18:07.627Z"}
+2021-04-27T11:18:07.632Z        DEBUG   provider-template       Reconciling     {"controller": "managed/nopresource.sample.template.crossplane.io", "request": "/example"}
+
+
+        My values
+
+23.632331304s
+
+ReconcileSuccess  True Synced
+
+Available  True Ready

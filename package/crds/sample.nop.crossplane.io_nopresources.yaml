@@ -4,29 +4,26 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
-  name: mytypes.sample.template.crossplane.io
+  name: nopresources.sample.nop.crossplane.io
 spec:
-  group: sample.template.crossplane.io
+  group: sample.nop.crossplane.io
   names:
     categories:
     - crossplane
     - managed
-    - PROVIDER-NAME
-    kind: MyType
-    listKind: MyTypeList
-    plural: mytypes
-    singular: mytype
+    - nop
+    kind: NopResource
+    listKind: NopResourceList
+    plural: nopresources
+    singular: nopresource
   scope: Cluster
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .status.bindingPhase
-      name: STATUS
+    - jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: READY
       type: string
-    - jsonPath: .status.atProvider.state
-      name: STATE
-      type: string
-    - jsonPath: .spec.classRef.name
-      name: CLASS
+    - jsonPath: .status.conditions[?(@.type=='Synced')].status
+      name: SYNCED
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: AGE
@@ -34,7 +31,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: A MyType is an example API type. Please replace `PROVIDER-NAME` with your actual provider name, like `aws`, `azure`, `gcp`, `alibaba`
+        description: A NopResource is an example API type. Please replace `PROVIDER-NAME` with your actual provider name, like `aws`, `azure`, `gcp`, `alibaba`
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
@@ -45,7 +42,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: A MyTypeSpec defines the desired state of a MyType.
+            description: A NopResourceSpec defines the desired state of a NopResource.
             properties:
               deletionPolicy:
                 description: DeletionPolicy specifies what will happen to the underlying external when this managed resource is deleted - either "Delete" or "Orphan" the external resource. The "Delete" policy is the default when no policy is specified.
@@ -54,12 +51,26 @@ spec:
                 - Delete
                 type: string
               forProvider:
-                description: MyTypeParameters are the configurable fields of a MyType.
+                description: NopResourceParameters are the configurable fields of a NopResource.
                 properties:
-                  configurableField:
-                    type: string
+                  conditionAfter:
+                    items:
+                      description: ResourceConditionAfter is a configurable field of NopResource.
+                      properties:
+                        conditionStatus:
+                          type: string
+                        conditionType:
+                          type: string
+                        time:
+                          type: string
+                      required:
+                      - conditionStatus
+                      - conditionType
+                      - time
+                      type: object
+                    type: array
                 required:
-                - configurableField
+                - conditionAfter
                 type: object
               providerConfigRef:
                 description: ProviderConfigReference specifies how the provider that will be used to create, observe, update, and delete this managed resource should be configured.
@@ -96,10 +107,10 @@ spec:
             - forProvider
             type: object
           status:
-            description: A MyTypeStatus represents the observed state of a MyType.
+            description: A NopResourceStatus represents the observed state of a NopResource.
             properties:
               atProvider:
-                description: MyTypeObservation are the observable fields of a MyType.
+                description: NopResourceObservation are the observable fields of a NopResource.
                 properties:
                   observableField:
                     type: string

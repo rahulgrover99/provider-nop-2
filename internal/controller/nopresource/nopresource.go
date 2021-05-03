@@ -14,75 +14,59 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package mytype
+package nopresource
 
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
-	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
+
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
-	"github.com/crossplane/provider-template/apis/sample/v1alpha1"
-	apisv1alpha1 "github.com/crossplane/provider-template/apis/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	"github.com/crossplane/provider-nop/apis/sample/v1alpha1"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
-	errNotMyType    = "managed resource is not a MyType custom resource"
-	errTrackPCUsage = "cannot track ProviderConfig usage"
-	errGetPC        = "cannot get ProviderConfig"
-	errGetCreds     = "cannot get credentials"
-
-	errNewClient = "cannot create new Service"
+	errNotNopResource = "managed resource is not a NopResource custom resource"
 )
 
-// A NoOpService does nothing.
-type NoOpService struct{}
-
-var (
-	newNoOpService = func(_ []byte) (interface{}, error) { return &NoOpService{}, nil }
-)
-
-// Setup adds a controller that reconciles MyType managed resources.
+// Setup adds a controller that reconciles NopResource managed resources.
 func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
-	name := managed.ControllerName(v1alpha1.MyTypeGroupKind)
-
-	o := controller.Options{
-		RateLimiter: ratelimiter.NewDefaultManagedRateLimiter(rl),
-	}
+	name := managed.ControllerName(v1alpha1.NopResourceGroupKind)
 
 	r := managed.NewReconciler(mgr,
-		resource.ManagedKind(v1alpha1.MyTypeGroupVersionKind),
+		resource.ManagedKind(v1alpha1.NopResourceGroupVersionKind),
 		managed.WithExternalConnecter(&connector{
-			kube:         mgr.GetClient(),
-			usage:        resource.NewProviderConfigUsageTracker(mgr.GetClient(), &apisv1alpha1.ProviderConfigUsage{}),
-			newServiceFn: newNoOpService}),
+			kube: mgr.GetClient(),
+		}),
+		managed.WithInitializers(managed.NewNameAsExternalName(mgr.GetClient())),
+		managed.WithPollInterval(1*time.Second),
 		managed.WithLogger(l.WithValues("controller", name)),
 		managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name))))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		WithOptions(o).
-		For(&v1alpha1.MyType{}).
+		For(&v1alpha1.NopResource{}).
 		Complete(r)
 }
 
 // A connector is expected to produce an ExternalClient when its Connect method
 // is called.
 type connector struct {
-	kube         client.Client
-	usage        resource.Tracker
-	newServiceFn func(creds []byte) (interface{}, error)
+	kube client.Client
 }
 
 // Connect typically produces an ExternalClient by:
@@ -91,32 +75,14 @@ type connector struct {
 // 3. Getting the credentials specified by the ProviderConfig.
 // 4. Using the credentials to form a client.
 func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	cr, ok := mg.(*v1alpha1.MyType)
+	_, ok := mg.(*v1alpha1.NopResource)
 	if !ok {
-		return nil, errors.New(errNotMyType)
+		return nil, errors.New(errNotNopResource)
 	}
 
-	if err := c.usage.Track(ctx, mg); err != nil {
-		return nil, errors.Wrap(err, errTrackPCUsage)
-	}
+	// fmt.Printf(string(cr.GetCondition(xpv1.TypeReady).Status) + "\n\n")
 
-	pc := &apisv1alpha1.ProviderConfig{}
-	if err := c.kube.Get(ctx, types.NamespacedName{Name: cr.GetProviderConfigReference().Name}, pc); err != nil {
-		return nil, errors.Wrap(err, errGetPC)
-	}
-
-	cd := pc.Spec.Credentials
-	data, err := resource.CommonCredentialExtractor(ctx, cd.Source, c.kube, cd.CommonCredentialSelectors)
-	if err != nil {
-		return nil, errors.Wrap(err, errGetCreds)
-	}
-
-	svc, err := c.newServiceFn(data)
-	if err != nil {
-		return nil, errors.Wrap(err, errNewClient)
-	}
-
-	return &external{service: svc}, nil
+	return &external{}, nil
 }
 
 // An ExternalClient observes, then either creates, updates, or deletes an
@@ -128,13 +94,42 @@ type external struct {
 }
 
 func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
-	cr, ok := mg.(*v1alpha1.MyType)
+	cr, ok := mg.(*v1alpha1.NopResource)
 	if !ok {
-		return managed.ExternalObservation{}, errors.New(errNotMyType)
+		return managed.ExternalObservation{}, errors.New(errNotNopResource)
+	}
+	startTime := cr.CreationTimestamp
+
+	// If object was deleted, return it does not exist so that managed reconciler removes finalizer
+	if meta.WasDeleted(mg) {
+		return managed.ExternalObservation{ResourceExists: false}, nil
 	}
 
+	ci := reconcileLogic(cr.Spec.ForProvider.ConditionAfter, time.Since(startTime.Time))
+
+	for _, l := range ci {
+		// fmt.Printf("Calling update on index %d\n", l)
+
+		x := xpv1.Condition{
+			Type:               xpv1.ConditionType(cr.Spec.ForProvider.ConditionAfter[l].ConditionType),
+			Status:             v1.ConditionStatus(cr.Spec.ForProvider.ConditionAfter[l].ConditionStatus),
+			LastTransitionTime: metav1.Now(),
+			Reason:             xpv1.ReasonAvailable,
+		}
+
+		cr.Status.SetConditions(x)
+	}
+
+	// x := cr.Status.Conditions
+	// fmt.Printf("\n\n	My values	\n\n")
+	// fmt.Printf("%v", ci)
+	// fmt.Printf(time.Since(startTime.Time).String() + "\n\n")
+	// for _, e := range x {
+	// 	fmt.Printf("%s %s %s %s", string(e.Reason), string(e.Message), string(e.Status), string(e.Type))
+	// 	fmt.Print("\n\n")
+	// }
 	// These fmt statements should be removed in the real implementation.
-	fmt.Printf("Observing: %+v", cr)
+	// fmt.Printf("Observing: %+v", cr)
 
 	return managed.ExternalObservation{
 		// Return false when the external resource does not exist. This lets
@@ -154,9 +149,9 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 }
 
 func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
-	cr, ok := mg.(*v1alpha1.MyType)
+	cr, ok := mg.(*v1alpha1.NopResource)
 	if !ok {
-		return managed.ExternalCreation{}, errors.New(errNotMyType)
+		return managed.ExternalCreation{}, errors.New(errNotNopResource)
 	}
 
 	fmt.Printf("Creating: %+v", cr)
@@ -169,9 +164,9 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 }
 
 func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
-	cr, ok := mg.(*v1alpha1.MyType)
+	cr, ok := mg.(*v1alpha1.NopResource)
 	if !ok {
-		return managed.ExternalUpdate{}, errors.New(errNotMyType)
+		return managed.ExternalUpdate{}, errors.New(errNotNopResource)
 	}
 
 	fmt.Printf("Updating: %+v", cr)
@@ -184,12 +179,42 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 }
 
 func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
-	cr, ok := mg.(*v1alpha1.MyType)
+	cr, ok := mg.(*v1alpha1.NopResource)
 	if !ok {
-		return errors.New(errNotMyType)
+		return errors.New(errNotNopResource)
 	}
 
 	fmt.Printf("Deleting: %+v", cr)
 
+	cr.Status.SetConditions(xpv1.Deleting())
+
 	return nil
+}
+
+// reconcileLogic returns a slice of indices from conditionAfter which states
+// the condition for each type specified till the given timeElapsed duration.
+func reconcileLogic(conditionAfter []v1alpha1.ResourceConditionAfter, timeElapsed time.Duration) []int {
+	latestTime := make(map[string]time.Duration)
+	latestIdx := make(map[string]int)
+
+	for i := 0; i < len(conditionAfter); i++ {
+		specTime, _ := time.ParseDuration(conditionAfter[i].Time)
+
+		// For each ConditionType finds the latest time it was updated until the
+		// elapsed time and the corresponding index of the same in conditionAfter.
+		if timeElapsed >= specTime {
+			lastChange, ok := latestTime[conditionAfter[i].ConditionType]
+			if !ok || lastChange < specTime {
+				latestTime[conditionAfter[i].ConditionType] = specTime
+				latestIdx[conditionAfter[i].ConditionType] = i
+			}
+		}
+	}
+
+	var idx []int
+	for _, l := range latestIdx {
+		idx = append(idx, l)
+	}
+
+	return idx
 }
