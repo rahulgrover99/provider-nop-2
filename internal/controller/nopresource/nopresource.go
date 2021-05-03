@@ -34,16 +34,13 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
-	"github.com/crossplane/provider-template/apis/sample/v1alpha1"
+	"github.com/crossplane/provider-nop/apis/sample/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
 	errNotNopResource = "managed resource is not a NopResource custom resource"
-	errTrackPCUsage   = "cannot track ProviderConfig usage"
-	errGetPC          = "cannot get ProviderConfig"
-	errGetCreds       = "cannot get credentials"
 )
 
 // Setup adds a controller that reconciles NopResource managed resources.
@@ -205,7 +202,7 @@ func reconcileLogic(conditionAfter []v1alpha1.ResourceConditionAfter, timeElapse
 
 		// For each ConditionType finds the latest time it was updated until the
 		// elapsed time and the corresponding index of the same in conditionAfter.
-		if timeElapsed >= time.Duration(specTime) {
+		if timeElapsed >= specTime {
 			lastChange, ok := latestTime[conditionAfter[i].ConditionType]
 			if !ok || lastChange < specTime {
 				latestTime[conditionAfter[i].ConditionType] = specTime

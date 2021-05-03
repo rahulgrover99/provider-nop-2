@@ -28,7 +28,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 
-	"github.com/crossplane/provider-template/apis/sample/v1alpha1"
+	"github.com/crossplane/provider-nop/apis/sample/v1alpha1"
 )
 
 // Unlike many Kubernetes projects Crossplane does not use third party testing
@@ -97,31 +97,31 @@ func TestReconcileLogic(t *testing.T) {
 		"EmptyReconcileArray": {
 			reason:            "Empty slice should be returned in case no conditions specified till given time elapsed.",
 			resourcecondition: c,
-			elapsedtime:       time.Duration(1*time.Second + 999*time.Millisecond),
+			elapsedtime:       1*time.Second + 999*time.Millisecond,
 			want:              nil,
 		},
 		"SingleTypeReconcile": {
 			reason:            "Slice with a single element should be returned when a single condition type has been specified.",
 			resourcecondition: c,
-			elapsedtime:       time.Duration(2 * time.Second),
+			elapsedtime:       2 * time.Second,
 			want:              []int{5},
 		},
 		"IndexChangeReconcile": {
 			reason:            "Even if condition specified is same at later time, index for the later time should be returned.",
 			resourcecondition: c,
-			elapsedtime:       time.Duration(5 * time.Second),
+			elapsedtime:       5 * time.Second,
 			want:              []int{1, 3},
 		},
 		"NormalReconcileBehaviour": {
 			reason:            "Indexes with latest status of each condition type should be returned till given time elapsed.",
 			resourcecondition: c,
-			elapsedtime:       time.Duration(8 * time.Second),
+			elapsedtime:       8 * time.Second,
 			want:              []int{2, 3},
 		},
 		"LongTimeReconcileBehaviour": {
 			reason:            "Indexes with last set status of each condition type should be returned till given time elapsed.",
 			resourcecondition: c,
-			elapsedtime:       time.Duration(50 * time.Second),
+			elapsedtime:       50 * time.Second,
 			want:              []int{0, 4},
 		},
 	}
