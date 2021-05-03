@@ -19,12 +19,15 @@ package nopresource
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
+
+	"github.com/crossplane/provider-template/apis/sample/v1alpha1"
 )
 
 // Unlike many Kubernetes projects Crossplane does not use third party testing
@@ -71,4 +74,80 @@ func TestObserve(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestReconcileLogic(t *testing.T) {
+
+	c := []v1alpha1.ResourceConditionAfter{
+		{Time: "10s", ConditionType: "Ready", ConditionStatus: "False"},
+		{Time: "5s", ConditionType: "Ready", ConditionStatus: "False"},
+		{Time: "7s", ConditionType: "Ready", ConditionStatus: "True"},
+		{Time: "5s", ConditionType: "Synced", ConditionStatus: "False"},
+		{Time: "10s", ConditionType: "Synced", ConditionStatus: "True"},
+		{Time: "2s", ConditionType: "Ready", ConditionStatus: "False"},
+	}
+
+	cases := map[string]struct {
+		reason            string
+		resourcecondition []v1alpha1.ResourceConditionAfter
+		elapsedtime       time.Duration
+		want              []int
+	}{
+		"EmptyReconcileArray": {
+			reason:            "Empty slice should be returned in case no conditions specified till given time elapsed.",
+			resourcecondition: c,
+			elapsedtime:       time.Duration(1*time.Second + 999*time.Millisecond),
+			want:              []int{},
+		},
+		"SingleTypeReconcile": {
+			reason:            "Slice with a single element should be returned when a single condition type has been specified.",
+			resourcecondition: c,
+			elapsedtime:       time.Duration(2 * time.Second),
+			want:              []int{5},
+		},
+		"NormalReconcileBehaviour": {
+			reason:            "Indexes with latest status of each condition type should be returned till given time elapsed.",
+			resourcecondition: c,
+			elapsedtime:       time.Duration(8 * time.Second),
+			want:              []int{2, 3},
+		},
+		"LongTimeReconcileBehaviour": {
+			reason:            "Indexes with last set status of each condition type should be returned till given time elapsed.",
+			resourcecondition: c,
+			elapsedtime:       time.Duration(50 * time.Second),
+			want:              []int{0, 4},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			got := ReconcileLogic(tc.resourcecondition, tc.elapsedtime)
+			if !sameIntSlice(tc.want, got) {
+				t.Errorf("\n%s\nReconcileLogic(...): want []int %v, got []int %v\n", tc.reason, tc.want, got)
+			}
+		})
+	}
+
+}
+
+// Matches the content of the slices. Order does not matter.
+func sameIntSlice(x, y []int) bool {
+	if len(x) != len(y) {
+		return false
+	}
+
+	diff := make(map[int]int, len(x))
+	for _, _x := range x {
+		diff[_x]++
+	}
+	for _, _y := range y {
+		if _, ok := diff[_y]; !ok {
+			return false
+		}
+		diff[_y] -= 1
+		if diff[_y] == 0 {
+			delete(diff, _y)
+		}
+	}
+	return len(diff) == 0
 }

@@ -33,7 +33,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/provider-template/apis/sample/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -83,7 +83,7 @@ func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.E
 		return nil, errors.New(errNotNopResource)
 	}
 
-	// fmt.Printf(string(cr.GetCondition(runtimev1alpha1.TypeReady).Status) + "\n\n")
+	// fmt.Printf(string(cr.GetCondition(xpv1.TypeReady).Status) + "\n\n")
 
 	return &external{}, nil
 }
@@ -108,57 +108,29 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		return managed.ExternalObservation{ResourceExists: false}, nil
 	}
 
-	// Logic 1 - Set condition as soon as the time elapsed in seconds is equal to time specified in Spec
-	// for i := 0; i < len(cr.Spec.ForProvider.ConditionAfter); i++ {
-	// 	elapsed, _ := time.ParseDuration(cr.Spec.ForProvider.ConditionAfter[i].Time)
-	// 	if time.Duration(time.Since(startTime.Time).Seconds()) == time.Duration(elapsed.Seconds()) {
-	// 		fmt.Printf("Calling update on index %d\n", i)
+	ci := ReconcileLogic(cr.Spec.ForProvider.ConditionAfter, time.Since(startTime.Time))
 
-	// 		x := runtimev1alpha1.Condition{
-	// 			Type:               runtimev1alpha1.ConditionType(cr.Spec.ForProvider.ConditionAfter[i].ConditionType),
-	// 			Status:             v1.ConditionStatus(cr.Spec.ForProvider.ConditionAfter[i].ConditionStatus),
-	// 			LastTransitionTime: metav1.Now(),
-	// 			Reason:             runtimev1alpha1.ReasonAvailable,
-	// 		}
+	for _, l := range ci {
+		// fmt.Printf("Calling update on index %d\n", l)
 
-	// 		cr.Status.SetConditions(x)
-
-	// 	}
-	// }
-
-	// Logic 2 - Set condition at every reconcile to the latest specified condition in Spec
-	l := -1
-	mx := -1
-	for i := 0; i < len(cr.Spec.ForProvider.ConditionAfter); i++ {
-		elapsed, _ := time.ParseDuration(cr.Spec.ForProvider.ConditionAfter[i].Time)
-		if time.Duration(time.Since(startTime.Time).Seconds()) >= time.Duration(elapsed.Seconds()) {
-			if mx < int(elapsed.Seconds()) {
-				mx = int(elapsed.Seconds())
-				l = i
-			}
-		}
-	}
-	if l != -1 {
-		fmt.Printf("Calling update on index %d\n", l)
-
-		x := runtimev1alpha1.Condition{
-			Type:               runtimev1alpha1.ConditionType(cr.Spec.ForProvider.ConditionAfter[l].ConditionType),
+		x := xpv1.Condition{
+			Type:               xpv1.ConditionType(cr.Spec.ForProvider.ConditionAfter[l].ConditionType),
 			Status:             v1.ConditionStatus(cr.Spec.ForProvider.ConditionAfter[l].ConditionStatus),
 			LastTransitionTime: metav1.Now(),
-			Reason:             runtimev1alpha1.ReasonAvailable,
+			Reason:             xpv1.ReasonAvailable,
 		}
 
 		cr.Status.SetConditions(x)
-
 	}
 
-	x := cr.Status.Conditions
-	fmt.Printf("\n\n	My values	\n\n")
-	fmt.Printf(time.Since(startTime.Time).String() + "\n\n")
-	for _, e := range x {
-		fmt.Printf("%s %s %s %s", string(e.Reason), string(e.Message), string(e.Status), string(e.Type))
-		fmt.Print("\n\n")
-	}
+	// x := cr.Status.Conditions
+	// fmt.Printf("\n\n	My values	\n\n")
+	// fmt.Printf("%v", ci)
+	// fmt.Printf(time.Since(startTime.Time).String() + "\n\n")
+	// for _, e := range x {
+	// 	fmt.Printf("%s %s %s %s", string(e.Reason), string(e.Message), string(e.Status), string(e.Type))
+	// 	fmt.Print("\n\n")
+	// }
 	// These fmt statements should be removed in the real implementation.
 	// fmt.Printf("Observing: %+v", cr)
 
@@ -217,7 +189,29 @@ func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
 
 	fmt.Printf("Deleting: %+v", cr)
 
-	cr.Status.SetConditions(runtimev1alpha1.Deleting())
+	cr.Status.SetConditions(xpv1.Deleting())
 
 	return nil
+}
+
+func ReconcileLogic(conditionAfter []v1alpha1.ResourceConditionAfter, t time.Duration) []int {
+	latestTime := make(map[string]time.Duration)
+	latestIdx := make(map[string]int)
+	for i := 0; i < len(conditionAfter); i++ {
+		elapsed, _ := time.ParseDuration(conditionAfter[i].Time)
+		if t >= time.Duration(elapsed) {
+			mx, ok := latestTime[conditionAfter[i].ConditionType]
+			if !ok || mx < elapsed {
+				latestTime[conditionAfter[i].ConditionType] = elapsed
+				latestIdx[conditionAfter[i].ConditionType] = i
+			}
+		}
+	}
+
+	var idx []int
+	for _, l := range latestIdx {
+		idx = append(idx, l)
+	}
+
+	return idx
 }
